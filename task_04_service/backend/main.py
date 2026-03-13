@@ -5,7 +5,7 @@ import pandas as pd
 from pydantic import BaseModel
 from datetime import date
 from fastapi import FastAPI
-
+import csv
 
 #пайдантик 
 class RecordCreate(BaseModel):
@@ -40,6 +40,15 @@ def get_records():
 	return df.to_dict(orient="records")
 
 @app.post("/records")
-def post_records():
+def add_record(record: RecordCreate):
 	df = read_data()
-	
+	with open('data.csv', 'a', new_line = '') as f:
+		writer = csv.writer(f)
+    		writer.writerow(new_row)
+	to_date(df)
+
+@app.delete("/records/{id}")
+def delete_record(id: int):
+	df = read_data()
+	df = df.drop(id)
+	to_date(df)
