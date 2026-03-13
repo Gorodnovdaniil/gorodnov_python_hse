@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from datetime import date
 from fastapi import FastAPI
 import csv
+from fastapi import HTTPException
+
 
 #пайдантик 
 class RecordCreate(BaseModel):
@@ -39,16 +41,31 @@ def get_records():
 	df = read_data()
 	return df.to_dict(orient="records")
 
+
 @app.post("/records")
 def add_record(record: RecordCreate):
-	df = read_data()
-	with open('data.csv', 'a', new_line = '') as f:
-		writer = csv.writer(f)
-    		writer.writerow(new_row)
-	to_date(df)
+    	df = read_data()
+    
+    	new_id = 1 if df.empty else int(df['id'].max()) + 1
+    
+    	new_row = [new_id, record.timestep, record.consumption_eur, 
+               record.consumption_sib, record.price_eur, record.price_sib]
+    
+    	with open('data.csv', 'a', newline='') as f:
+        	writer = csv.writer(f)
+        	writer.writerow(new_row)
+    	return {"message": "Record added", "id": new_id}
+
 
 @app.delete("/records/{id}")
 def delete_record(id: int):
 	df = read_data()
-	df = df.drop(id)
-	to_date(df)
+    	
+    	if id not in df['id'].values:
+        	raise HTTPException(status_code=404, detail="Item not found")
+    
+
+    	df = df[df['id'] != id]
+    	to_data(df)
+    
+    	return {"deleted_id": id}
