@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 #импорты
 
@@ -9,7 +10,7 @@ import csv
 from fastapi import HTTPException
 
 
-#пайдантик 
+#пайдантик
 class RecordCreate(BaseModel):
     timestep: date
     consumption_eur: int
@@ -28,44 +29,43 @@ def ping():
 
 #функции для csv
 def read_data():
-	df = pd.read_csv('data.csv')
-	return df
+    df = pd.read_csv('data.csv')
+    return df
 
 def to_data(df):
-	df.to_csv('data.csv', index=False)
+    df.to_csv('data.csv', index=False)
 
 #эндпоинты
 
 @app.get("/records")
 def get_records():
-	df = read_data()
-	return df.to_dict(orient="records")
+    df = read_data()
+    return df.to_dict(orient="records")
 
 
 @app.post("/records")
 def add_record(record: RecordCreate):
-    	df = read_data()
-    
-    	new_id = 1 if df.empty else int(df['id'].max()) + 1
-    
-    	new_row = [new_id, record.timestep, record.consumption_eur, 
+    df = read_data()
+
+    new_id = 1 if df.empty else int(df['id'].max()) + 1
+
+    new_row = [new_id, record.timestep, record.consumption_eur,
                record.consumption_sib, record.price_eur, record.price_sib]
-    
-    	with open('data.csv', 'a', newline='') as f:
-        	writer = csv.writer(f)
-        	writer.writerow(new_row)
-    	return {"message": "Record added", "id": new_id}
+
+    with open('data.csv', 'a', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(new_row)
+    return {"message": "Record added", "id": new_id}
 
 
 @app.delete("/records/{id}")
 def delete_record(id: int):
-	df = read_data()
-    	
-    	if id not in df['id'].values:
-        	raise HTTPException(status_code=404, detail="Item not found")
-    
+    df = read_data()
 
-    	df = df[df['id'] != id]
-    	to_data(df)
+    if id not in df['id'].values:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    df = df[df['id'] != id]
+    to_data(df)
     
-    	return {"deleted_id": id}
+    return {"deleted_id": id}
