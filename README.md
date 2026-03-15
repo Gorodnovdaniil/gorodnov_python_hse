@@ -1,1 +1,0 @@
-# gorodnov_python_hse
